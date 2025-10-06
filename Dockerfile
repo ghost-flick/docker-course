@@ -1,14 +1,15 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
-
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /src
 COPY ["WebApp/", "WebApp/"]
-RUN dotnet restore "WebApp/WebApp.csproj"
 
 WORKDIR /src/WebApp
+RUN dotnet restore "WebApp.csproj"
 RUN dotnet build "WebApp.csproj" -c Release -o /app/build
-
 RUN dotnet publish "WebApp.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "/app/publish/WebApp.dll"]
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "/app/WebApp.dll"]
